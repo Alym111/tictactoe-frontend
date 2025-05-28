@@ -9,25 +9,24 @@ export default function Login() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-useEffect(() => {
-  const queryParams = new URLSearchParams(window.location.search);
-  const autoUsername = queryParams.get('username');
-  
-  if (autoUsername) {
-    setUsername(decodeURIComponent(autoUsername));
-    // Можно добавить автофокус на поле пароля:
-    document.getElementById('password-input')?.focus();
-  }
-}, []);
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const autoUsername = queryParams.get('username');
 
+    if (autoUsername) {
+      setUsername(decodeURIComponent(autoUsername));
+      document.getElementById('password-input')?.focus();
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await loginUser({ username: username, password: password }); // Замените на данные из формы
-      router.push('/game');
-    } catch (error) {
-      alert('Ошибка входа: ' + error);
+      await loginUser({ username, password });
+      console.log('Login successful, redirecting to /lobby');
+      router.push('/lobby'); // Перенаправляем на лобби
+    } catch (error: any) {
+      setError('Ошибка входа: ' + error.message);
     }
   };
 
@@ -51,6 +50,7 @@ useEffect(() => {
         />
 
         <input
+          id="password-input"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -65,7 +65,12 @@ useEffect(() => {
         >
           Войти
         </button>
-        <button className="underline" onClick={() => router.push("/register")}>You don't have an accaunt?</button>
+        <button
+          className="underline mt-4 block w-full text-center"
+          onClick={() => router.push("/register")}
+        >
+          Нет аккаунта? Зарегистрируйтесь
+        </button>
 
         {error && (
           <p className="mt-4 text-center text-sm text-red-600">{error}</p>

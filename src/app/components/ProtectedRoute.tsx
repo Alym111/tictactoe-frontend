@@ -1,15 +1,22 @@
-
 "use client";
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getToken } from '../auth';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (!getToken()) router.push('/login');
-  }, [router]);
+    if (!loading && !user) {
+      console.log('No user, redirecting to /login');
+      router.push('/login');
+    }
+  }, [user, loading, router]);
 
-  return <>{children}</>;
+  if (loading) {
+    return <div>Проверка авторизации...</div>;
+  }
+
+  return user ? <>{children}</> : null;
 }
