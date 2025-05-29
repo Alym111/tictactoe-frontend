@@ -34,15 +34,13 @@ export default function GamePage() {
   }
 
   return (
-    <ProtectedRoute>
     <div className="game-page">
       <h1>{mode === 'create' ? 'Ваша игра' : `Игра #${id}`}</h1>
-      <TicTacToeGame 
-        mode={mode} 
-        gameId={id} 
+      <TicTacToeGame
+        mode={mode}
+        gameId={id}
         username={user.username}
       />
     </div>
-    </ProtectedRoute>
   );
 }
