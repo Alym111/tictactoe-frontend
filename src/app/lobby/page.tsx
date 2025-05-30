@@ -19,21 +19,29 @@ export default function Lobby() {
       router.push('/login');
     }
   }, [user, loading, router]);
+  
   useEffect(() => {
-    if (!user) return;
-    const socket = new SockJS("http://localhost:8080/ws");
-    const client = new Client({ webSocketFactory: () => socket, reconnectDelay: 5000 });
-    client.onConnect = () => {
-      client.subscribe("/topic/games", (message) => {
-        setAvailableGames(JSON.parse(message.body));
-      });
-    };
-    client.activate();
-    stompClientRef.current = client;
-    client.deactivate();
-  }, [user]);
+  const socket = new SockJS("http://localhost:8080/ws");
+  const client = new Client({ webSocketFactory: () => socket });
 
-  // Первый fetch при заходе
+  client.onConnect = () => {
+   client.subscribe("/topic/games", (message) => {
+  const games = JSON.parse(message.body);
+  console.log("LOBBY WS: Received games update:", games);
+  setAvailableGames(games);
+  if (games.length === 0) {
+    console.log("No available games!");
+  }
+});
+  };
+
+  client.activate();
+  stompClientRef.current = client;
+
+  return () => {
+    client.deactivate();
+  };
+}, []);
   useEffect(() => {
     if (!user) return;
     const token = getToken();

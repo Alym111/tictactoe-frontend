@@ -44,7 +44,6 @@ export default function TicTacToeGame({
     destination: `/app/game/leave/${gameId}`,
     body: JSON.stringify({ username }),
   });
-  setWaitingOpponent(true);
   setTimeout(() => router.push("/lobby"), 2000);
 };
 
@@ -206,7 +205,6 @@ export default function TicTacToeGame({
     [isYourTurn, board, stompClient, gameStatus, gameId, username, symbol]
   );
 
-  // Отправить запрос на рематч
   const handleRematch = useCallback(() => {
     if (!stompClient || !gameId) return;
     stompClient.publish({
@@ -216,7 +214,6 @@ export default function TicTacToeGame({
     setRematchRequested(true);
   }, [stompClient, gameId, username]);
 
-  // Ответить на рематч
   const handleRematchResponse = (agree: boolean) => {
     if (!stompClient || !gameId) return;
     stompClient.publish({
@@ -279,7 +276,7 @@ export default function TicTacToeGame({
       <div className="game-status">
         {gameStatus ||
           `Ходит: ${isYourTurn ? "Вы" : opponent || "Противник"}`}
-          <button onClick={() => handleRematchResponse(false)}>Выйти</button>
+          <button onClick={handleLeaveGame}>Выйти</button>
       </div>
       {!opponent && gameStatus ? (
         <div>Ожидание второго игрока...</div>
@@ -295,7 +292,6 @@ export default function TicTacToeGame({
       {waitingOpponent && (
       <div>
         <p>Ожидание соперника...</p>
-        <button onClick={handleLeaveGame}>Выйти</button>
       </div>
     )}
 
