@@ -224,17 +224,16 @@ export default function TicTacToeGame({
       body: JSON.stringify({ username, agree }),
     });
     setShowRematchModal(false);
-    setRematchRequested(agree); // если отказался, не ждём дальше
+    setRematchRequested(agree);
     if (!agree) {
       router.push("/lobby");
     }
   };
 
-  // Функция для рендера поля 3x3 без css grid/flex
   const renderBoard = () => (
     <table style={{ borderCollapse: "collapse", margin: "0 auto" }}>
       <tbody>
-        {[0, 1, 2].map((row) => (
+        {!waitingOpponent && [0, 1, 2].map((row) => (
           <tr key={row}>
             {[0, 1, 2].map((col) => {
               const idx = row * 3 + col;
@@ -280,6 +279,7 @@ export default function TicTacToeGame({
       <div className="game-status">
         {gameStatus ||
           `Ходит: ${isYourTurn ? "Вы" : opponent || "Противник"}`}
+          <button onClick={() => handleRematchResponse(false)}>Выйти</button>
       </div>
       {!opponent && gameStatus ? (
         <div>Ожидание второго игрока...</div>
