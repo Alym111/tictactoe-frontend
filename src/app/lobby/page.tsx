@@ -1,8 +1,10 @@
-'use client';
-import { useState, useEffect } from 'react';
+"use client";
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getToken } from '../auth';
 import { useAuth } from '@/hooks/useAuth';
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 
 export default function Lobby() {
   const router = useRouter();
@@ -10,23 +12,35 @@ export default function Lobby() {
   const [availableGames, setAvailableGames] = useState<any[]>([]);
   const [loadingGames, setLoadingGames] = useState(false);
   const [lobbyError, setLobbyError] = useState<string | null>(null);
+  const stompClientRef = useRef<Client | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
-      console.log('No user, redirecting to /login from lobby');
       router.push('/login');
     }
   }, [user, loading, router]);
-
   useEffect(() => {
     if (!user) return;
+    const socket = new SockJS("http://localhost:8080/ws");
+    const client = new Client({ webSocketFactory: () => socket, reconnectDelay: 5000 });
+    client.onConnect = () => {
+      client.subscribe("/topic/games", (message) => {
+        setAvailableGames(JSON.parse(message.body));
+      });
+    };
+    client.activate();
+    stompClientRef.current = client;
+    client.deactivate();
+  }, [user]);
 
+  // Первый fetch при заходе
+  useEffect(() => {
+    if (!user) return;
     const token = getToken();
     if (!token) {
       setLobbyError('Необходима авторизация');
       return;
     }
-
     setLoadingGames(true);
     fetch('http://localhost:8080/api/games', {
       headers: { 'Authorization': `Bearer ${token}` },
@@ -35,13 +49,8 @@ export default function Lobby() {
         if (!res.ok) throw new Error('Ошибка загрузки игр');
         return res.json();
       })
-      .then(data => {
-        console.log('Available games:', data);
-        setAvailableGames(data);
-        setLobbyError(null);
-      })
+      .then(setAvailableGames)
       .catch(err => {
-        console.error('Error fetching games:', err);
         setLobbyError(err.message);
         setAvailableGames([]);
       })
@@ -50,14 +59,11 @@ export default function Lobby() {
 
   const createGame = async () => {
     if (!user) return;
-
     setLoadingGames(true);
     setLobbyError(null);
     try {
       const token = getToken();
       if (!token) throw new Error('Необходима авторизация');
-
-      console.log('Creating game for user:', user.username);
       const response = await fetch('http://localhost:8080/api/games', {
         method: 'POST',
         headers: {
@@ -66,17 +72,10 @@ export default function Lobby() {
         },
         body: JSON.stringify({ username: user.username }),
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Ошибка создания игры');
-      }
-
+      if (!response.ok) throw new Error(await response.text() || 'Ошибка создания игры');
       const game = await response.json();
-      console.log('Game created:', game);
       router.push(`/game?mode=create&id=${game.gameId}`);
     } catch (err: any) {
-      console.error('Error creating game:', err);
       setLobbyError(err.message || 'Ошибка создания игры');
     } finally {
       setLoadingGames(false);
@@ -84,17 +83,11 @@ export default function Lobby() {
   };
 
   const joinGame = (gameId: string) => {
-    console.log('Joining game:', gameId);
     router.push(`/game?mode=join&id=${gameId}`);
   };
 
-  if (loading) {
-    return <div>Загрузка...</div>;
-  }
-
-  if (!user) {
-    return null;
-  }
+  if (loading) return <div>Загрузка...</div>;
+  if (!user) return null;
 
   return (
     <div className="lobby-container">

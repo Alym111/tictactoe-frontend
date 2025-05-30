@@ -25,6 +25,7 @@ export default function TicTacToeGame({
   const [opponent, setOpponent] = useState<string | null>(null);
 
   // Rematch logic
+  const [waitingOpponent, setWaitingOpponent] = useState(false);
   const [rematchRequested, setRematchRequested] = useState(false);
   const [showRematchModal, setShowRematchModal] = useState(false);
   const [rematchFrom, setRematchFrom] = useState<string | null>(null);
@@ -37,6 +38,15 @@ export default function TicTacToeGame({
     player2WantsRematch?: boolean;
     status?: string;
   }>({});
+  const handleLeaveGame = () => {
+  if (!stompClient || !gameId) return;
+  stompClient.publish({
+    destination: `/app/game/leave/${gameId}`,
+    body: JSON.stringify({ username }),
+  });
+  setWaitingOpponent(true);
+  setTimeout(() => router.push("/lobby"), 2000);
+};
 
   const updateGameState = useCallback(
     (game: any) => {
@@ -50,6 +60,14 @@ export default function TicTacToeGame({
           ? "Ничья!"
           : ""
       );
+      if (
+        (game.status === "WAITING" || !game.player2) &&
+        (game.player1?.username === username || game.player2?.username === username)
+      ) {
+        setWaitingOpponent(true);
+      } else {
+        setWaitingOpponent(false);
+      }
 
       setRematchState({
         player1WantsRematch: game.player1WantsRematch,
@@ -88,17 +106,6 @@ export default function TicTacToeGame({
         setRematchFrom(null);
       }
 
-      // Если оба согласились, сбрасываем состояние рематча
-      if (
-        game.player1WantsRematch &&
-        game.player2WantsRematch &&
-        (game.status === "IN_PROGRESS" || game.status === "WAITING")
-      ) {
-        setRematchRequested(false);
-        setShowRematchModal(false);
-        setRematchFrom(null);
-      }
-
       // Если кто-то отказался
       if (game.status === "REJECTED") {
         setRematchRequested(false);
@@ -106,6 +113,15 @@ export default function TicTacToeGame({
         setRematchFrom(null);
         // Через секунду выходим в лобби
         setTimeout(() => router.push("/lobby"), 1000);
+      }
+      // ...внутри updateGameState
+      if (
+        (game.status === "IN_PROGRESS" || game.status === "WAITING") &&
+        rematchRequested
+      ) {
+        setRematchRequested(false);
+        setShowRematchModal(false);
+        setRematchFrom(null);
       }
     },
     [username, rematchRequested, router]
@@ -276,6 +292,12 @@ export default function TicTacToeGame({
           {rematchRequested ? "Ожидание ответа..." : "Играть снова"}
         </button>
       )}
+      {waitingOpponent && (
+      <div>
+        <p>Ожидание соперника...</p>
+        <button onClick={handleLeaveGame}>Выйти</button>
+      </div>
+    )}
 
       {showRematchModal && (
         <div
