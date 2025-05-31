@@ -83,8 +83,13 @@ export default function TicTacToeGame({
           setOpponent(game.player1.username);
         }
       }
+      if (!game || !game.player1) {
+      if (username !== (game?.player1?.username)) {
+        setTimeout(() => router.push("/lobby"), 1000);
+      }
+      return;
+    }
 
-      // Показываем модалку, если другой игрок инициировал рематч
       if (
         game.status === "FINISHED" &&
         ((game.player1WantsRematch &&
