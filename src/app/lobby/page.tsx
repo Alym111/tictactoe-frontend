@@ -5,6 +5,7 @@ import { getToken } from '../auth';
 import { useAuth } from '@/hooks/useAuth';
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+import Sidebar from '../components/sideBar';
 
 export default function Lobby() {
   const router = useRouter();
@@ -99,6 +100,7 @@ export default function Lobby() {
 
   return (
     <div className="lobby-container">
+      <div className="sidebar"><Sidebar /></div>
       <h2>Добро пожаловать, {user.username}!</h2>
       {error && <div className="error">Ошибка авторизации: {error}</div>}
       {lobbyError && <div className="error">{lobbyError}</div>}
