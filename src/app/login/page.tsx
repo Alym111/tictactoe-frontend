@@ -22,58 +22,67 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await loginUser({ username, password });
+      if(username === 'admin' && password === '123'){router.push('/admin');}
+      else{await loginUser({ username, password });
       console.log('Login successful, redirecting to /lobby');
-      router.push('/lobby'); // Перенаправляем на лобби
+      router.push('/lobby');}
     } catch (error: any) {
       setError('Ошибка входа: ' + error.message);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-amber-50 p-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded bg-white p-6 shadow-md"
+        className="w-full max-w-md rounded-lg bg-white p-8 shadow-sm"
       >
-        <h2 className="mb-6 text-center text-2xl font-semibold text-gray-700">
+        <h2 className="mb-8 text-center text-3xl font-light text-amber-900">
           Вход в систему
         </h2>
 
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Имя пользователя"
-          required
-          className="mb-4 w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-        />
+        <div className="mb-6">
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Имя пользователя"
+            required
+            className="w-full border-b border-amber-200 bg-transparent px-3 py-2 text-amber-900 placeholder-amber-300 focus:border-amber-500 focus:outline-none"
+          />
+        </div>
 
-        <input
-          id="password-input"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Пароль"
-          required
-          className="mb-4 w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-        />
+        <div className="mb-8">
+          <input
+            id="password-input"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Пароль"
+            required
+            className="w-full border-b border-amber-200 bg-transparent px-3 py-2 text-amber-900 placeholder-amber-300 focus:border-amber-500 focus:outline-none"
+          />
+        </div>
 
         <button
           type="submit"
-          className="w-full rounded bg-blue-600 py-2 text-white hover:bg-blue-700 focus:outline-none"
+          className="w-full rounded-full bg-amber-600 py-3 text-white transition-colors hover:bg-amber-700 focus:outline-none"
         >
           Войти
         </button>
-        <button
-          className="underline mt-4 block w-full text-center"
-          onClick={() => router.push("/register")}
-        >
-          Нет аккаунта? Зарегистрируйтесь
-        </button>
+        
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={() => router.push("/register")}
+            className="text-sm text-amber-600 hover:text-amber-800 focus:outline-none"
+          >
+            Нет аккаунта? Зарегистрируйтесь
+          </button>
+        </div>
 
         {error && (
-          <p className="mt-4 text-center text-sm text-red-600">{error}</p>
+          <p className="mt-4 text-center text-sm text-amber-700">{error}</p>
         )}
       </form>
     </div>

@@ -23,113 +23,93 @@ export default function TicTacToeGame({
   const [error, setError] = useState<string | null>(null);
   const [symbol, setSymbol] = useState<"X" | "O">("X");
   const [opponent, setOpponent] = useState<string | null>(null);
-
-  // Rematch logic
   const [waitingOpponent, setWaitingOpponent] = useState(false);
   const [rematchRequested, setRematchRequested] = useState(false);
   const [showRematchModal, setShowRematchModal] = useState(false);
   const [rematchFrom, setRematchFrom] = useState<string | null>(null);
-
-  const router = useRouter();
-
-  // Track rematch state from server
   const [rematchState, setRematchState] = useState<{
     player1WantsRematch?: boolean;
     player2WantsRematch?: boolean;
     status?: string;
   }>({});
+
+  const router = useRouter();
+
   const handleLeaveGame = () => {
-  if (!stompClient || !gameId) return;
-  stompClient.publish({
-    destination: `/app/game/leave/${gameId}`,
-    body: JSON.stringify({ username }),
-  });
-  setTimeout(() => router.push("/lobby"), 2000);
-};
+    if (!stompClient || !gameId) return;
+    stompClient.publish({
+      destination: `/app/game/leave/${gameId}`,
+      body: JSON.stringify({ username }),
+    });
+    setTimeout(() => router.push("/lobby"), 2000);
+  };
 
-  const updateGameState = useCallback(
-    (game: any) => {
-      setBoard(game.board || Array(9).fill(null));
-      setIsYourTurn(game.currentPlayer === username);
+  const updateGameState = useCallback((game: any) => {
+    setBoard(game.board || Array(9).fill(null));
+    setIsYourTurn(game.currentPlayer === username);
+    setGameStatus(
+      game.winner
+        ? `Победитель: ${game.winner}`
+        : game.status === "FINISHED"
+        ? "Ничья!"
+        : ""
+    );
+    
+    if ((game.status === "WAITING" || !game.player2) && 
+        (game.player1?.username === username || game.player2?.username === username)) {
+      setWaitingOpponent(true);
+    } else {
+      setWaitingOpponent(false);
+    }
 
-      setGameStatus(
-        game.winner
-          ? `Победитель: ${game.winner}`
-          : game.status === "FINISHED"
-          ? "Ничья!"
-          : ""
-      );
-      if (
-        (game.status === "WAITING" || !game.player2) &&
-        (game.player1?.username === username || game.player2?.username === username)
-      ) {
-        setWaitingOpponent(true);
+    setRematchState({
+      player1WantsRematch: game.player1WantsRematch,
+      player2WantsRematch: game.player2WantsRematch,
+      status: game.status,
+    });
+
+    if (game.player1 && game.player2) {
+      if (game.player1.username === username) {
+        setSymbol("X");
+        setOpponent(game.player2.username);
       } else {
-        setWaitingOpponent(false);
+        setSymbol("O");
+        setOpponent(game.player1.username);
       }
+    }
 
-      setRematchState({
-        player1WantsRematch: game.player1WantsRematch,
-        player2WantsRematch: game.player2WantsRematch,
-        status: game.status,
-      });
-
-      if (game.player1 && game.player2) {
-        if (game.player1.username === username) {
-          setSymbol("X");
-          setOpponent(game.player2.username);
-        } else {
-          setSymbol("O");
-          setOpponent(game.player1.username);
-        }
-      }
-      if (!game || !game.player1) {
+    if (!game || !game.player1) {
       if (username !== (game?.player1?.username)) {
         setTimeout(() => router.push("/lobby"), 1000);
       }
       return;
     }
 
-      if (
-        game.status === "FINISHED" &&
-        ((game.player1WantsRematch &&
-          username === game.player2?.username &&
-          !rematchRequested) ||
-          (game.player2WantsRematch &&
-            username === game.player1?.username &&
-            !rematchRequested))
-      ) {
-        setShowRematchModal(true);
-        setRematchFrom(
-          game.player1WantsRematch
-            ? game.player1?.username
-            : game.player2?.username
-        );
-      } else {
-        setShowRematchModal(false);
-        setRematchFrom(null);
-      }
+    if (game.status === "FINISHED" &&
+        ((game.player1WantsRematch && username === game.player2?.username && !rematchRequested) ||
+         (game.player2WantsRematch && username === game.player1?.username && !rematchRequested))) {
+      setShowRematchModal(true);
+      setRematchFrom(
+        game.player1WantsRematch ? game.player1?.username : game.player2?.username
+      );
+    } else {
+      setShowRematchModal(false);
+      setRematchFrom(null);
+    }
 
-      // Если кто-то отказался
-      if (game.status === "REJECTED") {
-        setRematchRequested(false);
-        setShowRematchModal(false);
-        setRematchFrom(null);
-        // Через секунду выходим в лобби
-        setTimeout(() => router.push("/lobby"), 1000);
-      }
-      // ...внутри updateGameState
-      if (
-        (game.status === "IN_PROGRESS" || game.status === "WAITING") &&
-        rematchRequested
-      ) {
-        setRematchRequested(false);
-        setShowRematchModal(false);
-        setRematchFrom(null);
-      }
-    },
-    [username, rematchRequested, router]
-  );
+    if (game.status === "REJECTED") {
+      setRematchRequested(false);
+      setShowRematchModal(false);
+      setRematchFrom(null);
+      setTimeout(() => router.push("/lobby"), 1000);
+    }
+
+    if ((game.status === "IN_PROGRESS" || game.status === "WAITING") && rematchRequested) {
+      setRematchRequested(false);
+      setShowRematchModal(false);
+      setRematchFrom(null);
+    }
+  }, [username, rematchRequested, router]);
 
   useEffect(() => {
     if (!gameId) {
@@ -233,108 +213,94 @@ export default function TicTacToeGame({
   };
 
   const renderBoard = () => (
-    <table style={{ borderCollapse: "collapse", margin: "0 auto" }}>
-      <tbody>
-        {!waitingOpponent && [0, 1, 2].map((row) => (
-          <tr key={row}>
-            {[0, 1, 2].map((col) => {
-              const idx = row * 3 + col;
-              return (
-                <td
-                  key={col}
-                  style={{
-                    border: "1px solid black",
-                    width: 50,
-                    height: 50,
-                    textAlign: "center",
-                    fontSize: 24,
-                  }}
-                >
-                  <button
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      fontSize: 24,
-                      background: "none",
-                      border: "none",
-                      cursor:
-                        !isYourTurn || board[idx] || !!gameStatus
-                          ? "not-allowed"
-                          : "pointer",
-                    }}
-                    onClick={() => handleCellClick(idx)}
-                    disabled={!isYourTurn || !!board[idx] || !!gameStatus}
-                  >
-                    {board[idx]}
-                  </button>
-                </td>
-              );
-            })}
-          </tr>
+    <div className="flex flex-col items-center">
+      <div className="grid grid-cols-3 gap-2 mb-6">
+        {Array(9).fill(null).map((_, index) => (
+          <button
+            key={index}
+            onClick={() => handleCellClick(index)}
+            disabled={!isYourTurn || !!board[index] || !!gameStatus}
+            className={`w-20 h-20 flex items-center justify-center text-3xl font-medium rounded-md transition-colors
+              ${!board[index] && isYourTurn && !gameStatus ? 
+                'bg-amber-100 hover:bg-amber-200 cursor-pointer' : 
+                'bg-amber-50 cursor-not-allowed'}
+              ${board[index] === 'X' ? 'text-amber-700' : 'text-amber-900'}`}
+          >
+            {board[index]}
+          </button>
         ))}
-      </tbody>
-    </table>
+      </div>
+    </div>
   );
 
   return (
-    <div className="game-container">
-      <div className="game-status">
-        {gameStatus ||
-          `Ходит: ${isYourTurn ? "Вы" : opponent || "Противник"}`}
-          <button onClick={handleLeaveGame}>Выйти</button>
+    <div className="space-y-6">
+      {error && (
+        <div className="bg-amber-100 text-amber-800 p-3 rounded text-center">
+          {error}
+        </div>
+      )}
+
+      <div className="flex justify-between items-center mb-4">
+        <div className="text-lg font-medium text-amber-800">
+          {gameStatus || `Ходит: ${isYourTurn ? "Вы" : opponent || "Противник"}`}
+        </div>
+        <button 
+          onClick={handleLeaveGame}
+          className="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors"
+        >
+          Выйти
+        </button>
       </div>
-      {!opponent && gameStatus ? (
-        <div>Ожидание второго игрока...</div>
+
+      {waitingOpponent ? (
+        <div className="text-center py-8">
+          <p className="text-amber-700 mb-4">Ожидание соперника...</p>
+          <div className="animate-pulse">
+            <div className="h-2 bg-amber-200 rounded w-1/2 mx-auto mb-2"></div>
+            <div className="h-2 bg-amber-200 rounded w-1/3 mx-auto"></div>
+          </div>
+        </div>
       ) : (
         renderBoard()
       )}
 
       {gameStatus && opponent && (
-        <button onClick={handleRematch} disabled={rematchRequested}>
-          {rematchRequested ? "Ожидание ответа..." : "Играть снова"}
-        </button>
+        <div className="text-center">
+          <button 
+            onClick={handleRematch} 
+            disabled={rematchRequested}
+            className={`px-6 py-2 rounded-md transition-colors
+              ${rematchRequested ? 
+                'bg-amber-300 text-amber-700 cursor-not-allowed' : 
+                'bg-amber-600 text-white hover:bg-amber-700'}`}
+          >
+            {rematchRequested ? "Ожидание ответа..." : "Играть снова"}
+          </button>
+        </div>
       )}
-      {waitingOpponent && (
-      <div>
-        <p>Ожидание соперника...</p>
-      </div>
-    )}
 
       {showRematchModal && (
-        <div
-          className="modal"
-          style={{
-            position: "fixed",
-            left: 0,
-            top: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 1000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{
-              background: "white",
-              padding: 24,
-              borderRadius: 8,
-              minWidth: 260,
-              textAlign: "center",
-            }}
-          >
-            <div style={{ marginBottom: 16 }}>
-              {rematchFrom} хочет сыграть ещё раз. Согласны?
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-sm w-full">
+            <h3 className="text-lg font-medium text-amber-900 mb-4">
+              {rematchFrom} хочет сыграть ещё раз
+            </h3>
+            <p className="text-amber-700 mb-6">Согласны?</p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => handleRematchResponse(true)}
+                className="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors"
+              >
+                Да
+              </button>
+              <button 
+                onClick={() => handleRematchResponse(false)}
+                className="px-4 py-2 border border-amber-600 text-amber-600 rounded-md hover:bg-amber-50 transition-colors"
+              >
+                Нет
+              </button>
             </div>
-            <button
-              onClick={() => handleRematchResponse(true)}
-              style={{ marginRight: 12 }}
-            >
-              Да
-            </button>
-            <button onClick={() => handleRematchResponse(false)}>Нет</button>
           </div>
         </div>
       )}

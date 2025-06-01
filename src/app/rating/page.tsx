@@ -7,41 +7,51 @@ import { useAuth } from "@/hooks/useAuth";
 
 const RatingPage = () => {
   const { players, loading, error } = usePlayersStatistics();
-    const { user, loading : userLoading, error: userError } = useAuth();
+  const { user, loading: userLoading, error: userError } = useAuth();
 
-  if (loading) return <p>Загрузка...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
-
-    function clsx(arg0: { "bg-gray-100": boolean; }): string | undefined {
-        throw new Error("Function not implemented.");
-    }
+  if (loading) return <p className="text-[#8B6B4A]">Загрузка...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div style={{ padding: 20 }}>
+    <div className="flex p-5">
       <Sidebar />
-      <h1>Рейтинг игроков по максимальной серии побед</h1>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th style={{ border: "1px solid black", padding: "8px" }}>Имя</th>
-            <th style={{ border: "1px solid black", padding: "8px" }}>Всего игр</th>
-            <th style={{ border: "1px solid black", padding: "8px" }}>Побед</th>
-            <th style={{ border: "1px solid black", padding: "8px" }}>Поражений</th>
-            <th style={{ border: "1px solid black", padding: "8px" }}>Макс серия побед</th>
-          </tr>
-        </thead>
-        <tbody>
-          {players.map((player) => (
-            <tr key={player.username} className={`${player.username === user?.username ? "bg-gray-100" : ""}`}>
-              <td style={{ border: "1px solid black", padding: "8px" }}>{player.username}</td>
-              <td style={{ border: "1px solid black", padding: "8px" }}>{player.totalGames}</td>
-              <td style={{ border: "1px solid black", padding: "8px" }}>{player.wins}</td>
-              <td style={{ border: "1px solid black", padding: "8px" }}>{player.losses}</td>
-              <td style={{ border: "1px solid black", padding: "8px" }}>{player.maxWinStreak ?? 0}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <main className="flex-1 ml-10">
+        <h1 className="text-[#3E2D1F] font-light text-[28px] mb-6">
+          Рейтинг игроков по максимальной серии побед
+        </h1>
+        <div className="flex flex-col gap-3">
+          {players.map((player, index) => {
+            const isCurrentUser = player.username === user?.username;
+
+            return (
+              <div
+                key={player.username}
+                className={`
+                  flex items-center justify-between px-6 py-4 rounded-xl
+                  transition-all
+                  ${isCurrentUser
+                    ? "bg-[#EAE8DF] shadow-md shadow-[#8B6B4A]/20 font-semibold"
+                    : "bg-white shadow-sm font-normal"}
+                  text-[#3E2D1F]
+                `}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="text-[#8B6B4A] font-bold text-[20px] w-8 text-center">
+                    #{index + 1}
+                  </div>
+                  <div className="text-[18px]">{player.username}</div>
+                </div>
+                <div className="flex gap-8 text-[16px] text-[#8B6B4A]">
+                  <div>Игр: {player.totalGames}</div>
+                  <div>Побед: {player.wins}</div>
+                  <div>Поражений: {player.losses}</div>
+                  <div>Макс. серия: {player.maxWinStreak ?? 0}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </main>
     </div>
   );
 };
