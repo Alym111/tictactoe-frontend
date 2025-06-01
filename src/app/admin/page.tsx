@@ -21,38 +21,29 @@ const AdminUsersPage = () => {
 
   const [viewMode, setViewMode] = useState<"chart" | "users">("chart");
 
-  if (loading) return <p>Загрузка...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (loading) return <p className="p-6 text-lg">Загрузка...</p>;
+  if (error) return <p className="p-6 text-lg text-red-600">{error}</p>;
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Админка: {viewMode === "chart" ? "Статистика по логинам" : "Список пользователей"}</h1>
+    <div className="p-6 max-w-6xl mx-auto text-[#3E2D1F]">
+      <h1 className="text-2xl font-semibold mb-6">
+        Админка: {viewMode === "chart" ? "Статистика по логинам" : "Список пользователей"}
+      </h1>
 
-      <div style={{ marginBottom: 20 }}>
+      <div className="mb-6 flex gap-4">
         <button
           onClick={() => setViewMode("chart")}
-          style={{
-            marginRight: 10,
-            padding: "8px 16px",
-            backgroundColor: viewMode === "chart" ? "#1284d8" : "#ccc",
-            color: viewMode === "chart" ? "white" : "black",
-            border: "none",
-            borderRadius: 4,
-            cursor: "pointer",
-          }}
+          className={`px-4 py-2 rounded-lg transition-colors duration-200 text-white font-medium ${
+            viewMode === "chart" ? "bg-[#3E2D1F]" : "bg-gray-400 hover:bg-gray-500"
+          }`}
         >
           График
         </button>
         <button
           onClick={() => setViewMode("users")}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: viewMode === "users" ? "#1284d8" : "#ccc",
-            color: viewMode === "users" ? "white" : "black",
-            border: "none",
-            borderRadius: 4,
-            cursor: "pointer",
-          }}
+          className={`px-4 py-2 rounded-lg transition-colors duration-200 text-white font-medium ${
+            viewMode === "users" ? "bg-[#3E2D1F]" : "bg-gray-400 hover:bg-gray-500"
+          }`}
         >
           Пользователи
         </button>
@@ -61,65 +52,44 @@ const AdminUsersPage = () => {
       {viewMode === "chart" && !statsLoading && !statsError && <LoginStatsChart data={stats} />}
 
       {viewMode === "users" && (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={{ border: "1px solid black", padding: "8px" }}>ID</th>
-              <th style={{ border: "1px solid black", padding: "8px" }}>Имя</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr
-                key={user.id}
-                style={{ cursor: "pointer" }}
-                onClick={() => openModal(user.id)}
-              >
-                <td style={{ border: "1px solid black", padding: "8px" }}>{user.id}</td>
-                <td style={{ border: "1px solid black", padding: "8px" }}>{user.username}</td>
+        <div className="overflow-x-auto rounded-lg shadow-md">
+          <table className="min-w-full table-auto border border-[#D6C6B8] bg-white">
+            <thead className="bg-[#EAE8DF] text-[#3E2D1F]">
+              <tr>
+                <th className="px-4 py-2 border border-[#D6C6B8]">ID</th>
+                <th className="px-4 py-2 border border-[#D6C6B8]">Имя</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr
+                  key={user.id}
+                  className="hover:bg-[#FDFBF6] cursor-pointer"
+                  onClick={() => openModal(user.id)}
+                >
+                  <td className="px-4 py-2 border border-[#D6C6B8]">{user.id}</td>
+                  <td className="px-4 py-2 border border-[#D6C6B8]">{user.username}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {modalOpen && selectedUser && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-            opacity: modalOpen ? 1 : 0,
-            pointerEvents: modalOpen ? "auto" : "none",
-            transition: "opacity 0.3s ease",
-          }}
+          className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50"
           onClick={closeModal}
         >
           <div
-            style={{
-              backgroundColor: "white",
-              padding: 30,
-              borderRadius: 12,
-              minWidth: 320,
-              maxWidth: "90vw",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
-              transform: modalOpen ? "translateY(0)" : "translateY(-20px)",
-              transition: "transform 0.3s ease",
-            }}
+            className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md transform transition-transform duration-300"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 style={{ marginTop: 0, marginBottom: 20 }}>Информация о пользователе</h2>
+            <h2 className="text-xl font-semibold mb-4">Информация о пользователе</h2>
             <p><b>ID:</b> {selectedUser.id}</p>
             <p><b>Имя:</b> {selectedUser.username}</p>
 
-            <hr style={{ margin: "20px 0" }} />
+            <hr className="my-4" />
 
             <p><b>Всего игр:</b> {selectedUser.totalGames}</p>
             <p><b>Побед:</b> {selectedUser.wins}</p>
@@ -128,30 +98,17 @@ const AdminUsersPage = () => {
             <p><b>Текущая серия побед:</b> {selectedUser.currentWinStreak}</p>
             <p><b>Максимальная серия побед:</b> {selectedUser.maxWinStreak}</p>
 
-            <div style={{ marginTop: 30, display: "flex", justifyContent: "flex-end", gap: 10 }}>
+            <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={deleteUser}
                 disabled={deleteLoading}
-                style={{
-                  backgroundColor: "red",
-                  color: "white",
-                  border: "none",
-                  padding: "10px 16px",
-                  borderRadius: 6,
-                  cursor: deleteLoading ? "not-allowed" : "pointer",
-                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
               >
                 {deleteLoading ? "Удаление..." : "Удалить пользователя"}
               </button>
               <button
                 onClick={closeModal}
-                style={{
-                  backgroundColor: "#ccc",
-                  border: "none",
-                  padding: "10px 16px",
-                  borderRadius: 6,
-                  cursor: "pointer",
-                }}
+                className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded-md"
               >
                 Закрыть
               </button>
