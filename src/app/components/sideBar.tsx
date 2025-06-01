@@ -43,7 +43,8 @@ export default function Sidebar() {
         >
           <ul className="space-y-4">
              <li><Link href="/lobby"><span onClick={() => setIsOpen(false)}>🎮 Лобби</span></Link></li>
-            <li><Link href="/statistics"><span onClick={() => setIsOpen(false)}>Statistics</span></Link></li>
+            <li><Link href="/statistics"><span onClick={() => setIsOpen(false)}>Statistic</span></Link></li>
+            <li><Link href="/rating"><span onClick={() => setIsOpen(false)}>Rating</span></Link></li>
             <li><Link href="/login"><span onClick={() => setIsOpen(false)}>Logout</span></Link></li>
           </ul>
         </div>
