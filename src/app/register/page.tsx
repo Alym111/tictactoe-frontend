@@ -39,7 +39,7 @@ export default function Register() {
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Имя пользователя"
             required
-            className="w-full border-b border-amber-200 bg-transparent px-3 py-2 text-amber-900 placeholder-amber-300 focus:border-amber-500 focus:outline-none"
+            className="w-full border-b border-amber-200 bg-transparent px-3 py-2 text-amber-900 placeholder-amber-300 focus:border-amber-500 focus:outline-none rounded-md"
           />
         </div>
 
@@ -50,7 +50,7 @@ export default function Register() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Пароль"
             required
-            className="w-full border-b border-amber-200 bg-transparent px-3 py-2 text-amber-900 placeholder-amber-300 focus:border-amber-500 focus:outline-none"
+            className="w-full border-b border-amber-200 bg-transparent px-3 py-2 text-amber-900 placeholder-amber-300 focus:border-amber-500 focus:outline-none rounded-md" 
           />
         </div>
 
